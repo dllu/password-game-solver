@@ -30,6 +30,7 @@ const paul = "🐔🐛🐛🐛🥚";
 const moon = "🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘";
 const strength = "🏋️‍♂️🏋️‍♂️🏋️‍♂️";
 const delim = "|";
+let country = "canada";
 
 window.Date = function () {
   this.now = function () {
@@ -48,7 +49,7 @@ window.Date.now = function () {
 function apply() {
   let div = document.querySelector("div.ProseMirror");
   let p = div.querySelector("p");
-  let pass = password("Ne7+", "el salvador", "tract", "youtu.be/pcPncxZkFOA");
+  let pass = password("Ne7+", country, "tract", "youtu.be/EAQ2Q5uS0Gs");
   unused(pass);
   pass = format(pass);
   p.innerHTML = pass;
@@ -69,7 +70,7 @@ function password(chess, country, wordle, youtube) {
     moon,
     strength,
   ].join(delim);
-  string += roman(string);
+  string += delim + roman(string);
   let elements = element(string);
   let out = `${elements}${delim}${paul}${delim}${string}${delim}${number(
     string
@@ -78,6 +79,49 @@ function password(chess, country, wordle, youtube) {
     5 - paul.length + 8 - moon.length + 3 - strength.length + 7; // not sure where the 7 comes from but whatever
   out += delim.repeat(131 - (out.length + correction));
   return out;
+}
+
+async function geocodeAddress(lat, lng) {
+  const apiKey = "YOUR_API_KEY"; // Replace with your Google Maps API key
+  const geocodingEndpoint = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+
+  try {
+    const response = await fetch(geocodingEndpoint);
+    const data = await response.json();
+
+    if (data.status === "OK") {
+      const results = data.results[0];
+      console.log(results);
+      // Process the geocoding results here
+      for (let component of results.address_components) {
+        if (component.types[0] == "country") {
+          country = component.long_name.toLowerCase();
+        }
+      }
+    } else {
+      // Handle the geocoding error
+      console.error("Geocoding failed:", data.status);
+    }
+  } catch (error) {
+    // Handle any other errors that may occur
+    console.error("An error occurred:", error);
+  }
+}
+
+function geoguessr() {
+  let data = document.querySelector("iframe.geo").src.split("?pb=");
+  data = data[data.length - 1].split("!");
+  let latitude = 0,
+    longitude = 0;
+  for (let val of data) {
+    let header = val.substr(0, 2);
+    if (header == "1d") {
+      latitude = parseFloat(val.substr(2));
+    } else if (header == "2d") {
+      longitude = parseFloat(val.substr(2));
+    }
+  }
+  geocodeAddress(latitude, longitude);
 }
 
 function captcha() {
@@ -195,67 +239,6 @@ function format(string) {
   console.log(string);
   console.log(outputHTML);
   return outputHTML;
-  /*
-    outputHTML = outputHTML.replace(/\]\[/g, '');
-    outputHTML = outputHTML.replace(/\)\(/g, '');
-
-    outputHTML = outputHTML.replace(/\[/g, '<em>');
-    outputHTML = outputHTML.replace(/\]/g, '</em>');
-    outputHTML = outputHTML.replace(/\(/g, '<strong>');
-    outputHTML = outputHTML.replace(/\)/g, '</strong>');
-
-    const wingdings = '<span style="font-family: Wingdings">';
-    const times = '<span style="font-family: Times New Roman">';
-    const end = '</span>';
-
-    outputHTML = outputHTML.replace('XXXV', '????');
-    outputHTML = outputHTML.replace('V</em><strong>II', '!!!');
-    outputHTML = outputHTML.replace('V', '###');
-    outputHTML = outputHTML.replace('I', '%%%');
-    outputHTML = outputHTML.replace('????', `</em>${end}${times}<em>XXXV</em>${end}${wingdings}<em>`);
-    outputHTML = outputHTML.replace('!!!', `</em>${end}${times}<em>V</em><strong>II</strong>${end}${wingdings}<strong>`);
-    outputHTML = outputHTML.replace('###', `</em>${end}${times}<em>V</em>${end}${wingdings}<em>`);
-    outputHTML = outputHTML.replace('%%%', `</strong>${end}${times}<strong>I</strong>${end}${wingdings}<strong>`);
-
-    let intag = false;
-
-    outputHTML = `${wingdings}${outputHTML}${end}`
-
-
-    let wtf = 82;
-
-    // deal with digit font size
-    let output2 = ''
-    for (let i = 0; i < outputHTML.length; i++) {
-        const char = outputHTML[i];
-
-        if (char === '<') {
-            intag = true;
-        }
-        if (char === '>' && intag) {
-            intag = false;
-            output2 += char;
-            continue;
-        }
-        if (intag) {
-            output2 += char;
-            continue;
-        }
-
-        const is_digit = /\d/i.test(char);
-        if (is_digit) {
-            n = parseInt(char);
-            output2 += `</em>${end}<span style="font-family: Wingdings; font-size: ${n * n}px"><em>${char}</em>${end}${wingdings}<em>`;
-        } else {
-            output2 += `<span style="font-size: ${wtf}px">${char}</span>`;
-            wtf += 1;
-        }
-
-        
-    }
-    
-    return output2;
-    */
 }
 
 function roman(string) {
@@ -282,7 +265,6 @@ function number(string) {
     number_check += num;
     remainder -= num;
   }
-  console.log(remainder);
   return number_check;
 }
 
